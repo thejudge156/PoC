@@ -7,6 +7,7 @@ import mod.azure.azurelib.core.animation.AnimationController;
 import mod.azure.azurelib.core.animation.RawAnimation;
 import mod.azure.azurelib.core.object.PlayState;
 import mod.azure.azurelib.util.AzureLibUtil;
+import mod.azure.azurelib.util.RenderUtils;
 import net.minecraft.world.entity.EntityType;
 
 public class PlayerReplaced implements GeoReplacedEntity {
@@ -27,5 +28,10 @@ public class PlayerReplaced implements GeoReplacedEntity {
     @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() {
         return cache;
+    }
+
+    @Override
+    public double getTick(Object entity) {
+        return RenderUtils.getCurrentTick();
     }
 }
