@@ -17,7 +17,7 @@ public class AnimatableTextureMixin extends SimpleTexture {
 
     @Redirect(method = "load", at = @At(value = "INVOKE", target = "Lorg/apache/logging/log4j/Logger;warn(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;)V"))
     private void dontLogPngs(Logger instance, String s, Object loc, Object ex) {
-        if(!this.location.getPath().contains(".png")) {
+        if(!this.location.getPath().endsWith(".png")) {
             AzureLib.LOGGER.warn("Failed reading metadata of: {}", loc, ex);
         }
     }
