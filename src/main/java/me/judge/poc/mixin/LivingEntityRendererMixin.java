@@ -112,12 +112,18 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, M extend
         replacedModel.getBone("root").orElse(null).setPosY(23.5f);
         replacedModel.getBone("root").orElse(null).setRotY((float) -(((clientPlayer.yBodyRot) * (Math.PI/180)) + Math.PI));
         if(isAnim) {
+            copyRotAndPosFromGeoBone(playerModel.hat, replacedModel.getHeadBone(), 0, 0, 0);
             copyRotAndPosFromGeoBone(playerModel.head, replacedModel.getHeadBone(), 0, 0, 0);
             copyRotAndPosFromGeoBone(playerModel.body, replacedModel.getBodyBone(), 0, 0, 0);
+            copyRotAndPosFromGeoBone(playerModel.jacket, replacedModel.getBodyBone(), 0, 0, 0);
             copyRotAndPosFromGeoBone(playerModel.leftArm, replacedModel.getLeftArmBone(), replacedModel.getLeftArmOffsets()[0], replacedModel.getLeftArmOffsets()[1], replacedModel.getLeftArmOffsets()[2]);
+            copyRotAndPosFromGeoBone(playerModel.leftSleeve, replacedModel.getLeftArmBone(), replacedModel.getLeftArmOffsets()[0], replacedModel.getLeftArmOffsets()[1], replacedModel.getLeftArmOffsets()[2]);
             copyRotAndPosFromGeoBone(playerModel.leftLeg, replacedModel.getLeftLegBone(), replacedModel.getLeftLegOffsets()[0], replacedModel.getLeftLegOffsets()[1], replacedModel.getLeftLegOffsets()[2]);
+            copyRotAndPosFromGeoBone(playerModel.leftPants, replacedModel.getLeftArmBone(), replacedModel.getLeftArmOffsets()[0], replacedModel.getLeftArmOffsets()[1], replacedModel.getLeftArmOffsets()[2]);
+            copyRotAndPosFromGeoBone(playerModel.rightSleeve, replacedModel.getRightArmBone(), replacedModel.getRightArmOffsets()[0], replacedModel.getRightArmOffsets()[1], replacedModel.getRightArmOffsets()[2]);
             copyRotAndPosFromGeoBone(playerModel.rightArm, replacedModel.getRightArmBone(), replacedModel.getRightArmOffsets()[0], replacedModel.getRightArmOffsets()[1], replacedModel.getRightArmOffsets()[2]);
             copyRotAndPosFromGeoBone(playerModel.rightLeg, replacedModel.getRightLegBone(), replacedModel.getRightLegOffsets()[0], replacedModel.getRightLegOffsets()[1], replacedModel.getRightLegOffsets()[2]);
+            copyRotAndPosFromGeoBone(playerModel.rightPants, replacedModel.getRightArmBone(), replacedModel.getRightArmOffsets()[0], replacedModel.getRightArmOffsets()[1], replacedModel.getRightArmOffsets()[2]);
 
             renderer.defaultRender(p_115311_, entity, p_115312_, null, null, p_115309_, p_115310_, p_115313_);
         } else {
