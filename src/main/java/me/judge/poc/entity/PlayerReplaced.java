@@ -8,6 +8,8 @@ import mod.azure.azurelib.core.animation.RawAnimation;
 import mod.azure.azurelib.core.object.PlayState;
 import mod.azure.azurelib.util.AzureLibUtil;
 import mod.azure.azurelib.util.RenderUtils;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 
 public class PlayerReplaced implements GeoReplacedEntity {
@@ -32,6 +34,9 @@ public class PlayerReplaced implements GeoReplacedEntity {
 
     @Override
     public double getTick(Object entity) {
+        if(Minecraft.getInstance().isPaused()) {
+            return ((Entity)entity).tickCount;
+        }
         return RenderUtils.getCurrentTick();
     }
 }
