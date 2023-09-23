@@ -2,6 +2,7 @@ package me.judge.poc.entity;
 
 import mod.azure.azurelib.animatable.GeoReplacedEntity;
 import mod.azure.azurelib.core.animatable.instance.AnimatableInstanceCache;
+import mod.azure.azurelib.core.animatable.instance.InstancedAnimatableInstanceCache;
 import mod.azure.azurelib.core.animation.AnimatableManager;
 import mod.azure.azurelib.core.animation.AnimationController;
 import mod.azure.azurelib.core.animation.RawAnimation;
@@ -11,6 +12,7 @@ import mod.azure.azurelib.util.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import org.jetbrains.annotations.Nullable;
 
 public class PlayerReplaced implements GeoReplacedEntity {
     private final AnimatableInstanceCache cache = AzureLibUtil.createInstanceCache(this);
@@ -18,6 +20,12 @@ public class PlayerReplaced implements GeoReplacedEntity {
     @Override
     public EntityType<?> getReplacingEntityType() {
         return EntityType.PLAYER;
+    }
+
+    @Nullable
+    @Override
+    public AnimatableInstanceCache animatableCacheOverride() {
+        return new InstancedAnimatableInstanceCache(this);
     }
 
     @Override

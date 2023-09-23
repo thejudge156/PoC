@@ -1,53 +1,47 @@
-package me.judge.poc.mixin;
+package me.judge.poc.layers;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.tihyo.legends.client.events.RendererChangeEvent;
+import com.tihyo.legends.client.events.SetupAnimationEvent;
 import me.judge.poc.entity.PlayerReplaced;
 import me.judge.poc.model.PlayerReplacedModel;
 import me.judge.poc.renderer.PlayerReplacedRenderer;
 import me.judge.poc.util.AnimationUtil;
-import me.judge.poc.util.LivingEntityRendererExt;
 import mod.azure.azurelib.cache.object.GeoBone;
-import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.world.entity.player.Player;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import net.minecraftforge.common.MinecraftForge;
 
-@Mixin(LivingEntityRenderer.class)
-public abstract class LivingEntityRendererMixin<T extends LivingEntity, M extends EntityModel<T>> extends EntityRenderer<T> implements RenderLayerParent<T, M>, LivingEntityRendererExt {
-    @Shadow protected M model;
+import java.util.HashMap;
+import java.util.Map;
 
-    public LivingEntityRendererMixin(EntityRendererProvider.Context p_174289_, PlayerModel<AbstractClientPlayer> p_174290_, float p_174291_) {
-        super(p_174289_);
-    }
+public class AnimationLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
+    private final Map<Player, PlayerReplacedRenderer> rendererMap;
+    private final Map<Player, PlayerReplaced> entityMap;
+    private final EntityRendererProvider.Context context;
 
-    @Unique
-    PlayerReplacedRenderer renderer;
-    @Unique
-    PlayerReplaced entity;
-
-    @Inject(method = "<init>", at = @At(value = "RETURN"))
-    private void setRenderer(EntityRendererProvider.Context p_174289_, EntityModel p_174290_, float p_174291_, CallbackInfo ci) {
-        if(!(p_174290_ instanceof PlayerModel<?>)) {
+    public void postSetupAnimation(RendererChangeEvent event) {
+        if(event.getPlayer() != Minecraft.getInstance().player) {
             return;
         }
-        renderer = new PlayerReplacedRenderer(p_174289_);
-        entity = new PlayerReplaced();
+        renderShadow(event.getPoseStack(), event.getMultiBufferSource(), event.getPackedLight(), event.getPlayer(), event.getNetHeadYaw(), event.getPartialTicks());
     }
 
-    @Unique
+    public AnimationLayer(RenderLayerParent<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> p_117346_, EntityRendererProvider.Context context) {
+        super(p_117346_);
+        rendererMap = new HashMap<>();
+        entityMap = new HashMap<>();
+        this.context = context;
+        MinecraftForge.EVENT_BUS.addListener(this::postSetupAnimation);
+    }
+
     private void copyRotAndPosFromVanilla(GeoBone bone, ModelPart part, float offsetX, float offsetY, float offsetZ) {
         bone.setRotX(-part.xRot);
         bone.setRotY(-part.yRot);
@@ -58,7 +52,6 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, M extend
         bone.setPosZ(part.z + offsetZ);
     }
 
-    @Unique
     private void copyRotAndPosFromGeoBone(ModelPart part, GeoBone bone, float offsetX, float offsetY, float offsetZ) {
         part.xRot = -bone.getRotX();
         part.yRot = -bone.getRotY();
@@ -69,14 +62,26 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, M extend
         part.z = bone.getPosZ() + offsetZ;
     }
 
-    @Override
-    public void renderShadow(Player player, PoseStack stack, MultiBufferSource bufferSource, float yaw, float partialTick, int packedLight) {
-        PlayerModel<AbstractClientPlayer> playerModel = (PlayerModel<AbstractClientPlayer>) this.model;
+    private void checkVars(Player player) {
+        if(rendererMap.get(player) == null) {
+            rendererMap.put(player, new PlayerReplacedRenderer(context));
+            entityMap.put(player, new PlayerReplaced());
+        }
+    }
+
+    private void renderShadow(PoseStack stack, MultiBufferSource bufferSource, int packedLight, AbstractClientPlayer player, float yaw, float partialTick) {
+        checkVars(player);
+
+        PlayerReplacedRenderer renderer = rendererMap.get(player);
+        PlayerReplaced entity = entityMap.get(player);
+        renderer.setCurrentEntity(player);
+
+        PlayerModel<AbstractClientPlayer> playerModel = this.getParentModel();
         PlayerReplacedModel replacedModel = renderer.getModel();
         replacedModel.getBakedModel(renderer.getModel().getModelResource(entity));
         replacedModel.getBone("root").orElse(null).setRotZ(3.14159f);
         replacedModel.getBone("root").orElse(null).setPosY(23.5f);
-        replacedModel.getBone("root").orElse(null).setRotY((float) -(((player.yHeadRot) * (Math.PI/180)) + Math.PI));
+        replacedModel.getBone("root").orElse(null).setRotY((float) -(((player.yBodyRot) * (Math.PI/180)) + Math.PI));
         if(AnimationUtil.isAnimated(player)) {
             copyRotAndPosFromGeoBone(playerModel.hat, replacedModel.getHeadBone(), 0, 0, 0);
             copyRotAndPosFromGeoBone(playerModel.head, replacedModel.getHeadBone(), 0, 0, 0);
@@ -102,23 +107,21 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, M extend
         }
     }
 
-    @Inject(method = "render(Lnet/minecraft/world/entity/LivingEntity;FFLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/entity/LivingEntityRenderer;getRenderType(Lnet/minecraft/world/entity/LivingEntity;ZZZ)Lnet/minecraft/client/renderer/RenderType;", shift = At.Shift.AFTER))
-    private void renderShadowModel(T p_115308_, float p_115309_, float p_115310_, PoseStack p_115311_, MultiBufferSource p_115312_, int p_115313_, CallbackInfo ci) {
-        if(!(p_115308_ instanceof AbstractClientPlayer clientPlayer)) {
+    @Override
+    public void render(PoseStack stack, MultiBufferSource bufferSource, int packedLight, AbstractClientPlayer player, float yaw, float partialTick, float p_117355_, float p_117356_, float p_117357_, float p_117358_) {
+        if(player != Minecraft.getInstance().player) {
             return;
         }
-        renderer.setCurrentEntity(clientPlayer);
-        renderShadow(clientPlayer, p_115311_, p_115312_, p_115309_, p_115310_, p_115313_);
+        renderShadow(stack, bufferSource, packedLight, player, yaw, partialTick);
     }
 
-    @Override
-    public PlayerReplaced getEntity() {
-        return entity;
+    public PlayerReplacedRenderer getRenderer(Player player) {
+        checkVars(player);
+        return rendererMap.get(player);
     }
 
-    @Override
-    public PlayerReplacedRenderer getRenderer() {
-        return renderer;
+    public PlayerReplaced getEntity(Player player) {
+        checkVars(player);
+        return entityMap.get(player);
     }
 }

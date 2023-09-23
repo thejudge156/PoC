@@ -53,4 +53,5 @@ public class PlayerReplacedModel extends DefaultedEntityGeoModel<PlayerReplaced>
     public float[] getRightLegOffsets() {
         return new float[] {-2f, 11.625f, -0.1f};
     }
+
 }
