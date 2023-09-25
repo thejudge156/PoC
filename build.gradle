@@ -138,10 +138,13 @@ repositories {
     flatDir {
         dir 'libs'
     }
-    maven {url 'https://libs.azuredoom.com:4443/mods'}
+    maven {
+        url = "https://maven.kosmx.dev/"
+    }
 }
 
 dependencies {
+    jarJar.enable()
     // Specify the version of Minecraft to use.
     // Any artifact can be supplied so long as it has a "userdev" classifier artifact and is a compatible patcher artifact.
     // The "userdev" classifier will be requested and setup by ForgeGradle.
@@ -149,7 +152,7 @@ dependencies {
     // then special handling is done to allow a setup of a vanilla dependency without the use of an external repository.
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
-    implementation fg.deobf("mod.azure.azurelib:azurelib-forge-1.18.2:1.0.27")
+    implementation fg.deobf("dev.kosmx.player-anim:player-animation-lib-forge:1.0.2+1.18")
     implementation fg.deobf("blank:Legends:1.18.2-ss0.5.1")
 
     runtimeOnly fg.deobf("blank:Legends-Superheroes:1.18.2-ss0.5.1")
